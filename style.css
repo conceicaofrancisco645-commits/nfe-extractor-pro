@@ -334,3 +334,5 @@ td input.cell.is-bad { color: var(--amber); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+[hidden] { display: none !important; }
