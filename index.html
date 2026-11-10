@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="NF-e Extractor Pro — transforma DANFEs em PDF em planilhas Excel prontas para estoque e Power BI, direto no navegador.">
+  <meta name="theme-color" content="#071226">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NF-e Extractor">
+  <title>NF-e Extractor Pro</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icons/mark.svg">
+  <link rel="apple-touch-icon" href="icons/mark.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Pular para o conteúdo</a>
+  <div class="app-shell">
+    <aside class="rail">
+      <a class="brand" href="#painel" data-go="painel" aria-label="NF-e Extractor Pro — painel">
+        <img src="icons/mark.svg" alt="" width="36" height="36">
+        <span class="brand-name">NF-e Extractor <b>Pro</b></span>
+      </a>
+      <nav class="nav" aria-label="Seções">
+        <button class="nav-link is-active" data-go="painel"><i data-lucide="layout-panel-left"></i><span>Painel</span></button>
+        <button class="nav-link" data-go="conferencia"><i data-lucide="list-checks"></i><span>Conferência</span><em id="nav-pending" class="nav-count" hidden>0</em></button>
+        <button class="nav-link" data-go="historico"><i data-lucide="archive"></i><span>Histórico</span></button>
+      </nav>
+      <div class="rail-foot">
+        <button id="install-btn" class="install-btn" hidden><i data-lucide="monitor-down"></i><span>Instalar app</span></button>
+        <p class="local-note"><i data-lucide="shield-check"></i><span>As notas são lidas neste aparelho e não são enviadas a nenhum servidor.</span></p>
+      </div>
+    </aside>
+
+    <main id="main">
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 id="page-title">Painel</h1>
+          <p class="tagline">Inteligência na extração e organização de dados fiscais.</p>
+        </div>
+        <div class="topbar-actions">
+          <span id="net-status" class="net-status" hidden><i data-lucide="wifi-off"></i>Offline</span>
+          <button id="export-all" class="btn btn-excel" disabled><i data-lucide="sheet"></i>Exportar para Excel (.xlsx)</button>
+        </div>
+      </header>
+
+      <!-- PAINEL -->
+      <section id="painel" class="view is-active" aria-labelledby="page-title">
+        <div class="hero-grid">
+          <div id="drop-zone" class="sheet" tabindex="0" role="button" aria-describedby="drop-help">
+            <input id="file-input" type="file" accept="application/pdf,.pdf" multiple hidden>
+            <div class="sheet-head">
+              <span class="sheet-doc">DANFE</span>
+              <span class="sheet-sub">Documento auxiliar da nota fiscal eletrônica</span>
+            </div>
+            <div class="sheet-body">
+              <div class="sheet-icon"><i data-lucide="file-up"></i></div>
+              <h2>Solte aqui os PDFs das notas</h2>
+              <p id="drop-help">Um ou vários arquivos de uma vez. Todas as páginas são lidas, inclusive quando a tabela de produtos continua na folha seguinte.</p>
+              <button id="select-files" class="btn btn-primary" type="button"><i data-lucide="folder-open"></i>Importar PDF</button>
+            </div>
+            <div class="sheet-key" aria-hidden="true">
+              <span class="key-label">Chave de acesso</span>
+              <span id="hero-key" class="key-digits"></span>
+            </div>
+          </div>
+
+          <div class="fields" aria-label="Indicadores">
+            <div class="field field-wide"><span class="field-label">Valor total dos produtos</span><strong id="m-total">R$ 0,00</strong><small id="m-total-check">Aguardando notas</small></div>
+            <div class="field"><span class="field-label">Notas importadas</span><strong id="m-notes">0</strong><small id="m-pages">0 páginas lidas</small></div>
+            <div class="field"><span class="field-label">Produtos identificados</span><strong id="m-products">0</strong><small id="m-codes">0 códigos distintos</small></div>
+            <div class="field"><span class="field-label">Quantidade total de itens</span><strong id="m-qty">0</strong><small>Soma da coluna QTDE</small></div>
+            <div class="field"><span class="field-label">Pendentes de conferência</span><strong id="m-pending">0</strong><small>Precisam de revisão</small></div>
+            <div class="field field-wide field-meter"><span class="field-label">Extração validada</span><strong id="m-valid">0%</strong><div class="meter"><i id="m-valid-bar"></i></div></div>
+          </div>
+        </div>
+
+        <div class="lower-grid">
+          <section class="panel" aria-labelledby="queue-title">
+            <div class="panel-head">
+              <h2 id="queue-title">Notas desta sessão</h2>
+              <button id="clear-queue" class="btn btn-quiet" disabled><i data-lucide="eraser"></i>Limpar sessão</button>
+            </div>
+            <div id="queue" class="queue">
+              <p class="empty">Nenhuma nota importada ainda. Use <b>Importar PDF</b> ou arraste os arquivos para a folha acima.</p>
+            </div>
+          </section>
+          <section class="panel" aria-labelledby="chart-title">
+            <div class="panel-head"><h2 id="chart-title">Valor por nota</h2></div>
+            <div class="chart-box"><canvas id="value-chart" aria-label="Gráfico de valor total dos produtos por nota"></canvas></div>
+          </section>
+        </div>
+
+        <p class="fiscal-warning"><i data-lucide="info"></i>A extração é assistida. Confira os dados antes de qualquer uso fiscal ou contábil — o sistema nunca corrige valores da nota por conta própria.</p>
+      </section>
+
+      <!-- CONFERÊNCIA -->
+      <section id="conferencia" class="view" aria-labelledby="page-title">
+        <div id="audit" class="audit"></div>
+
+        <div class="toolbar">
+          <label class="search"><i data-lucide="search"></i><input id="f-search" type="search" placeholder="Buscar por código ou descrição" aria-label="Buscar por código ou descrição"></label>
+          <label class="select"><span>Nota</span><select id="f-note"><option value="">Todas</option></select></label>
+          <label class="select"><span>NCM</span><select id="f-ncm"><option value="">Todos</option></select></label>
+          <label class="select"><span>CST</span><select id="f-cst"><option value="">Todos</option></select></label>
+          <label class="check"><input id="f-pending" type="checkbox">Só pendentes</label>
+          <button id="f-clear" class="btn btn-quiet">Limpar filtros</button>
+        </div>
+
+        <div class="table-actions">
+          <span id="sel-info" class="sel-info">0 selecionados</span>
+          <button id="add-row" class="btn btn-ghost"><i data-lucide="plus"></i>Adicionar produto</button>
+          <button id="validate-sel" class="btn btn-ghost" disabled><i data-lucide="badge-check"></i>Marcar como conferido</button>
+          <button id="delete-sel" class="btn btn-danger" disabled><i data-lucide="trash-2"></i>Excluir selecionados</button>
+          <button id="export-note" class="btn btn-excel btn-sm"><i data-lucide="file-spreadsheet"></i>Exportar nota filtrada</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="grid">
+            <thead>
+              <tr>
+                <th class="c-sel"><input id="sel-all" type="checkbox" aria-label="Selecionar todos os visíveis"></th>
+                <th data-sort="code">COD.PROD.</th>
+                <th data-sort="description" class="c-desc">DESCRIÇÃO DO PRODUTO / SERVIÇO</th>
+                <th data-sort="ncm">NCM/SH</th>
+                <th data-sort="cst">CST</th>
+                <th data-sort="quantity" class="num">QTDE</th>
+                <th data-sort="unitValue" class="num">VL. UNITÁRIO</th>
+                <th data-sort="totalValue" class="num">VL. TOTAL</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody id="grid-body"></tbody>
+          </table>
+          <p id="grid-empty" class="empty">Importe uma DANFE no painel para começar a conferência.</p>
+        </div>
+        <p class="grid-foot" id="grid-foot"></p>
+      </section>
+
+      <!-- HISTÓRICO -->
+      <section id="historico" class="view" aria-labelledby="page-title">
+        <div class="history-head">
+          <p>Fica salvo só neste navegador: os produtos extraídos e os dados da nota. O PDF não é guardado.</p>
+          <button id="clear-history" class="btn btn-danger" disabled><i data-lucide="trash-2"></i>Apagar histórico</button>
+        </div>
+        <div id="history" class="history"></div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="tabbar" aria-label="Seções">
+    <button class="tab is-active" data-go="painel"><i data-lucide="layout-panel-left"></i>Painel</button>
+    <button class="tab" data-go="conferencia"><i data-lucide="list-checks"></i>Conferência</button>
+    <button class="tab" data-go="historico"><i data-lucide="archive"></i>Histórico</button>
+  </nav>
+
+  <dialog id="ios-install" class="modal">
+    <h2>Instalar no iPhone ou iPad</h2>
+    <p>No Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p>
+    <form method="dialog"><button class="btn btn-primary">Entendi</button></form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js"></script>
+  <script src="extractor.js"></script>
+  <script src="excel-export.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
